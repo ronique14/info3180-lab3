@@ -6,12 +6,29 @@ This file creates your application.
 """
 
 from app import app
+from app.forms import ContactForm
 from flask import render_template, request, redirect, url_for, flash
+from app import mail
+from flask_mail import Message
 
 
 ###
 # Routing for your application.
 ###
+
+@app.route("/contact", methods=["GET", "POST"])
+def contact():
+   form = ContactForm()
+   if form.validate_on_submit():
+       name = form.name.data
+       email = form.email.data
+       subject = form.subject.data
+       message = form.message.data  
+ 
+       return name + "<br /> " + email + "<br /> " + "<br /> " + subject + "<br /> " + message
+ 
+   return render_template('contact.html', form=form)
+
 
 @app.route('/')
 def home():
@@ -63,6 +80,19 @@ def add_header(response):
 def page_not_found(error):
     """Custom 404 page."""
     return render_template('404.html'), 404
+
+
+@app.route("/", methods=['POST', 'GET'])
+def index():
+    error = None
+    if request.method == 'POST':
+        if request.form['name']  or \
+            request.form['email'] :
+            error = 'Invalid credentials'
+        else:
+            flash('Your  email was successfully sent')
+            return redirect(url_for('home'))
+    return render_template('home.html', error=error)
 
 
 if __name__ == '__main__':
